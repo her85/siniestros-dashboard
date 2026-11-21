@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cobertura {
+  id         Int         @id @default(autoincrement())
+  nombre     String      @unique @db.VarChar(100)
+  siniestros Siniestro[]
+
+  @@map("coberturas")
+}
+
+model Zona {
+  id         Int         @id @default(autoincrement())
+  nombre     String      @unique @db.VarChar(100)
+  region     String?     @db.VarChar(100)
+  siniestros Siniestro[]
+
+  @@map("zonas")
+}
+
+model Siniestro {
+  id               Int       @id @default(autoincrement())
+  numeroSiniestro  String    @unique @map("numero_siniestro") @db.VarChar(30)
+  coberturaId      Int       @map("cobertura_id")
+  cobertura        Cobertura @relation(fields: [coberturaId], references: [id])
+  zonaId           Int       @map("zona_id")
+  zona             Zona      @relation(fields: [zonaId], references: [id])
+  fechaOcurrencia  DateTime  @map("fecha_ocurrencia") @db.Date
+  fechaApertura    DateTime  @map("fecha_apertura") @db.Date
+  fechaCierre      DateTime? @map("fecha_cierre") @db.Date
+  estado           String    @default("abierto") @db.VarChar(20)
+  costoEstimado    Decimal   @default(0) @map("costo_estimado") @db.Decimal(12, 2)
+  costoFinal       Decimal?  @map("costo_final") @db.Decimal(12, 2)
+  creadoEn         DateTime  @default(now()) @map("creado_en")
+
+  @@index([coberturaId], map: "idx_siniestros_cobertura")
+  @@index([zonaId], map: "idx_siniestros_zona")
+  @@index([fechaOcurrencia], map: "idx_siniestros_fecha")
+  @@index([estado], map: "idx_siniestros_estado")
+  @@map("siniestros")
+}
